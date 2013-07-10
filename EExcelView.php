@@ -38,6 +38,11 @@
 		public $onRenderDataCell = null;
 		public $onRenderFooterCell = null;
 		
+		//colors
+		public $header_color = 'FFFFFF';
+		public $row_color = 'FFFFFF';
+		public $row_alternate_color = 'FFFFFFF';
+		
 		//mime types used for streaming
 		public $mimeTypes = array(
 			'Excel5'	=> array(
@@ -121,6 +126,16 @@
 					$head =trim($column->header)!=='' ? $column->header : $column->grid->blankDisplay;
 
 				$cell = $this->objPHPExcel->getActiveSheet()->setCellValue($this->columnName($a)."1" ,$head, true);
+				$worksheet = $this->objPHPExcel->getActiveSheet();
+				$highest_column = $worksheet->getHighestColumn();
+				$worksheet->getStyle('A1:' . $highest_column . '1')->applyFromArray(
+          array(
+            'fill' => array(
+              'type' => PHPExcel_Style_Fill::FILL_SOLID,
+               'color' => array('rgb' => $this->header_color),
+            )
+          )
+        );
 				if(is_callable($this->onRenderHeaderCell))
 					call_user_func_array($this->onRenderHeaderCell, array($cell, $head));				
 			}			
@@ -163,7 +178,26 @@
                 }             
 
 				$a++;
-				$cell = $this->objPHPExcel->getActiveSheet()->setCellValue($this->columnName($a).($row+2) , strip_tags($value), true);				
+				$cell = $this->objPHPExcel->getActiveSheet()->setCellValue($this->columnName($a).($row+2) , strip_tags($value), true);	
+				$worksheet = $this->objPHPExcel->getActiveSheet();
+				$highest_column = $worksheet->getHighestColumn();
+				$cell_row = $cell->getRow();
+				$cell_column = $cell->getColumn();
+
+				if(is_float($row/2)) {
+          $color = $this->row_color;
+        }
+        else {
+          $color = $this->row_alternate_color;
+        }
+				$worksheet->getStyle('A' . $cell_row . ':' . $highest_column . $cell_row)->applyFromArray(
+          array(
+            'fill' => array(
+              'type' => PHPExcel_Style_Fill::FILL_SOLID,
+               'color' => array('rgb' => $color)
+            )
+          )
+        );			
 				if(is_callable($this->onRenderDataCell))
 					call_user_func_array($this->onRenderDataCell, array($cell, $data[$row], $value));
 			}				
